@@ -12,8 +12,6 @@ Built with React, Laravel, MySQL, and a Python / Flask / OpenCV / scikit-learn a
 
 ## Screenshots
 
-▶ [Watch the demo video](https://drive.google.com/file/d/1EXyZ0hCmUG-F93n3FsfIFsMYSN9HuNz9/view?usp=drive_link)
-
 ### Homepage / Issue Reporting
 ![Homepage](docs/screenshots/fmshs.png)
 
@@ -244,7 +242,7 @@ The AI service listens on `http://127.0.0.1:5000`.
 
 | Name | GitHub |
 | :--- | :--- |
-| **Arnab Mistry** | [@ArnabMistry](https://github.com/ArnabMistry) |
 | **Swapnil Jain** | [@Swapnil220705](https://github.com/Swapnil220705) |
+| **Arnab Mistry** | [@ArnabMistry](https://github.com/ArnabMistry) |
 | **Arnav Timble** | [@Arnz18](https://github.com/Arnz18) |
 | **Ojaswi Joshi** | [@OjaswiJoshi13](https://github.com/OjaswiJoshi13) |
