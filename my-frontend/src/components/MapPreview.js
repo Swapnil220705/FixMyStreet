@@ -37,7 +37,7 @@ const MapPreview = () => {
    * Loads the Google Maps script with the API key.
    **/
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyDB8AhMJd6xF9VVURQ_UWVTYJ_gkhUjkAY",
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || "",
   });
   
   /**

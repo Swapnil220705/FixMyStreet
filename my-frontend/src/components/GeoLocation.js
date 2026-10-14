@@ -300,10 +300,8 @@ const MapPreviewWithGeolocation = () => {
     }
   ];
 
-  // Use environment variable for API key (should be set up in .env file)
-  // const { REACT_APP_GOOGLE_MAPS_API_KEY } = process.env;
-  // For demo purposes, still using the key in the code but with a note
-  const GOOGLE_MAPS_API_KEY = "AIzaSyDB8AhMJd6xF9VVURQ_UWVTYJ_gkhUjkAY"; // Should be moved to environment variables
+  // Load Google Maps API key from environment variable
+  const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || "";
   
   // Better error handling for Google Maps loading
   const { isLoaded, loadError } = useLoadScript({

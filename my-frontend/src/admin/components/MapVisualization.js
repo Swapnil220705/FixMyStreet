@@ -5,7 +5,7 @@ const MapVisualization = ({ issues }) => {
   const [selectedIssue, setSelectedIssue] = useState(null);
   
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "AIzaSyDys9hUSbPvTwgQEG-GJ7YqOVXlYGuOPpI"
+    googleMapsApiKey: process.env.REACT_APP_ADMIN_GOOGLE_MAPS_API_KEY || process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ""
   });
   
   const mapContainerStyle = {
