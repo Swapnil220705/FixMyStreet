@@ -1,183 +1,250 @@
-# 🚧 FixMyStreet
+# FixMyStreet
 
-**FixMyStreet** is a civic tech platform that empowers citizens to report road issues such as potholes and damaged pavements. Built with **React**, **Laravel**, and **OpenCV**, the platform offers real-time issue reporting, AI-powered damage detection, and transparent complaint tracking — all designed to promote accountability and improve road safety across urban India.
+🏆 Winner, ESOC-X-Hack, IIIT Nagpur (1st among 100+ participants)
 
----
+FixMyStreet is a civic tech platform that lets citizens report road issues such as potholes and damaged pavements. Each geotagged report is analyzed by a computer vision pipeline (OpenCV region detection + an SVM classifier) that estimates damage severity, so authorities can prioritize repairs through an admin dashboard.
 
-## 📸 Screenshots
+Built with React, Laravel, MySQL, and a Python / Flask / OpenCV / scikit-learn analysis service.
 
-Here’s a preview of FixMyStreet in action:
-
-### 🏠 Homepage / Issue Reporting
-![Homepage](screenshots/fmshs.png)
-
-### 📍 Geotagged Complaint Form
-![Complaint Form](screenshots/fmsissulight.png)
-
-### 🧠 AI Pothole Detection Result
-![AI Detection](screenshots/fmsai.jpeg)
-
-### 📊 Admin Dashboard (Complaint Tracker)
-![Dashboard](screenshots/fmsadmpanel.png)
-
-### 📊 Report Log (Admin)
-![Log](screenshots/fmsadm2.png)
-
+▶ [Watch the demo video](https://drive.google.com/file/d/1EXyZ0hCmUG-F93n3FsfIFsMYSN9HuNz9/view?usp=drive_link)
 
 ---
 
-## 📌 Table of Contents
+## Screenshots
+
+▶ [Watch the demo video](https://drive.google.com/file/d/1EXyZ0hCmUG-F93n3FsfIFsMYSN9HuNz9/view?usp=drive_link)
+
+### Homepage / Issue Reporting
+![Homepage](docs/screenshots/fmshs.png)
+
+### Geotagged Complaint Form
+![Complaint Form](docs/screenshots/fmsissulight.png)
+
+### Pothole Detection Result
+![Pothole Detection](docs/screenshots/fmsai.jpeg)
+
+### Admin Dashboard (Complaint Tracker)
+![Dashboard](docs/screenshots/fmsadmpanel.png)
+
+### Report Log (Admin)
+![Log](docs/screenshots/fmsadm2.png)
+
+---
+
+## Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
+- [ML Pipeline](#ml-pipeline)
+- [Project Structure](#project-structure)
 - [Installation](#installation)
-- [Usage](#usage)
-- [AI Integration](#ai-integration)
+- [Limitations](#limitations)
 - [Future Roadmap](#future-roadmap)
 - [Contributors](#contributors)
-- [License](#license)
+- [Screenshots](#screenshots)
 
 ---
 
-## 🛣️ Overview
+## Overview
 
-India suffers thousands of casualties annually due to poor road conditions. Citizens lack an efficient way to report these problems, and authorities face difficulty prioritizing repairs due to inconsistent data.
+India suffers thousands of casualties annually due to poor road conditions. Citizens lack an efficient way to report these problems, and authorities find it hard to prioritize repairs because the data is inconsistent.
 
-**FixMyStreet bridges this civic gap by providing:**
+FixMyStreet addresses this by providing:
 
-- 🗺️ A user-friendly platform for reporting road damage with geotagged images
-- 🧠 AI-powered pothole detection and severity analysis using OpenCV
-- 📊 A real-time dashboard for municipal authorities to manage complaints and resolutions
-- 📬 Transparent status updates for complainants
-
-> *FixMyStreet is not just a reporting tool — it’s a step toward smarter, safer, and more accountable cities.*
+- 🗺️ A platform for reporting road damage with geotagged images
+- 🧠 Automated damage detection and severity scoring using OpenCV and an SVM classifier
+- 📊 An admin dashboard for authorities to review and manage complaints
+- 📬 Status updates for complainants
 
 ---
 
-## ⚙️ Tech Stack
+## Features
 
-### 🖥️ Frontend
-
-- **React** (JavaScript)
-- **Tailwind CSS** (or Bootstrap - as per actual codebase)
-
-### 🛠️ Backend
-
-- **Laravel** (PHP)
-- **MySQL**
-
-### 🧠 AI & Image Processing
-
-- **Python + OpenCV** (for image analysis)
-- **OpenCV.js** (for in-browser pothole preview – optional)
-
-### ☁️ Deployment
-
-- **GitHub**
-- **Vercel** (Frontend)
-- **Railway/Render** (Backend – Optional)
+- 📸 **Image-based reporting:** Upload photos of road damage along with real-time GPS coordinates.
+- 🤖 **Automated severity scoring:** Each uploaded image is processed to generate damage bounding boxes, an overall score, and a severity tier (`low`, `medium`, `high`).
+- 📊 **Admin dashboard & report log:** Review, prioritize, and filter complaints with map markers and stage metrics (tested with interactive simulation data).
+- 🔐 **Role-based views:** Citizen reporting interface alongside administrative management views with backend schema support.
+- 🧾 **Data logging:** Complaints, geographic locations, and AI-assessed severities are persisted in MySQL/SQLite for auditability.
 
 ---
 
-## 🧱 Architecture
-User (Frontend - React)
-          ↓
-Report with Image & Location
-          ↓
+## Tech Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | React, React Router, Lucide Icons, Recharts, Google Maps API |
+| **Backend** | Laravel (PHP), MySQL / SQLite, Guzzle HTTP |
+| **ML / Image Processing** | Python, Flask, OpenCV, scikit-learn, NumPy, joblib |
+| **Tooling & Versioning** | Git, GitHub |
+
+---
+
+## Architecture
+
+```text
+User (React frontend)
+          ↓ (Report with image + GPS location)
 Backend API (Laravel)
+          ↓ (POST /analyze with multipart image via Guzzle)
+Analysis Service (Flask: OpenCV region detection → SVC patch classification)
+          ↓ (Damage regions + final score + severity)
+Database (MySQL / SQLite)
           ↓
-AI Service (Python + OpenCV)
-          ↓
-Pothole Verification + Severity Detection
-          ↓
-Database (MySQL)
-          ↓
-Admin Dashboard & Citizen Complaint Status
+Admin Dashboard & Complaint Tracking
+```
 
+If the analysis service is unavailable, Laravel gracefully catches the exception, logs the event, and saves the complaint with a default severity of `low` and a score of `0`.
 
 ---
 
-## 🚀 Installation
+## ML Pipeline
 
-### 🧩 Prerequisites
+The analysis service (`backend/ai/pothole_detection/app.py`) combines classical computer vision with a trained classifier.
 
-Ensure the following are installed:
-- Node.js & npm
-- PHP & Composer
-- Laravel CLI
-- Python 3.x
-- MySQL Server
+### 1. Candidate Region Detection (OpenCV)
+- Convert the image to grayscale and apply a $5 \times 5$ Gaussian blur.
+- Detect edges with Canny edge detection (thresholds 50 / 150).
+- Find external contours and discard those with an area below 100 pixels.
+- Crop a bounding box around each remaining contour as a candidate damage patch.
 
-### 📦 Frontend Setup
+### 2. Feature Extraction (per patch, 513 features)
+- Resize each cropped patch to $64 \times 64$ pixels.
+- **Edge Density (1 feature):** Canny edge detection (thresholds 100 / 200) divided by total patch pixel area.
+- **Color Histogram (512 features):** 3D BGR color histogram with $8 \times 8 \times 8$ bins (`cv2.calcHist`).
+- Stacks edge density and color histogram into a 513-dimensional feature vector.
+
+### 3. Classification (scikit-learn)
+- **Model:** Support Vector Classifier (`sklearn.svm.SVC`, linear kernel, `probability=True`), saved as `road_damage_model.pkl`.
+- **Output:** Predicts a damage tier per patch (`0`, `1`, or `2`), mapped to scores of `30`, `60`, and `100`.
+
+### 4. Severity Aggregation
+- Final score is the arithmetic mean of all detected patch scores.
+- Score $\ge 50 \rightarrow$ **high**, $\ge 20 \rightarrow$ **medium**, otherwise **low** (also low if no candidate damage regions are detected).
+
+**Example Response (`POST /analyze`):**
+```json
+{
+  "damage_detected": true,
+  "damage_count": 2,
+  "damage_regions": [
+    {
+      "coordinates": [120, 85, 240, 195],
+      "damage_level": 1,
+      "score": 60
+    }
+  ],
+  "final_score": 60,
+  "severity": "high"
+}
+```
+
+*Note on Evaluation:* The original raw training images and training script were external and are not retained in this repository. Held-out benchmark metrics are therefore omitted until a formal benchmark set is evaluated.
+
+---
+
+## Project Structure
+
+```text
+FixMyStreet/
+├── backend/                     # Laravel backend API & database
+│   └── ai/pothole_detection/    # Flask AI service (app.py, road_damage_model.pkl, requirements.txt)
+├── frontend/                    # React frontend application
+├── docs/
+│   └── screenshots/             # Application screenshots & media
+├── .gitignore
+└── README.md
+```
+
+---
+
+## Installation
+
+### Prerequisites
+- Node.js (v16+) & npm
+- PHP (v8.2+) & Composer
+- Python (3.10+)
+- MySQL Server or SQLite
+
+---
+
+### Frontend
 
 ```bash
-git clone https://github.com/Swapnil220705/FixMyStreet.git
-cd FixMyStreet/frontend
+cd frontend
+cp .env.example .env
+```
+
+Configure your Google Maps API keys in `.env`:
+```env
+REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+REACT_APP_ADMIN_GOOGLE_MAPS_API_KEY=your_admin_google_maps_api_key_here
+```
+
+Install packages and start the React development server:
+```bash
 npm install
 npm start
 ```
-- Visit: http://localhost:3000
+The frontend will run at `http://localhost:3000`.
 
 ---
 
-### 🔧 Backend Setup
+### Backend (Laravel)
 
 ```bash
-cd ../backend
+cd backend
 composer install
+cp .env.example .env
+php artisan key:generate
 php artisan migrate
 php artisan serve
 ```
-- Configure .env for database credentials.
+The backend API will run at `http://localhost:8000`.
 
 ---
-### ✨ Features
-- 📸 Image-Based Reporting – Upload pictures of road damage with geolocation
 
-- 🤖 AI-Powered Pothole Detection – Uses OpenCV to verify issues and assign severity levels
+### Analysis Service (Flask)
 
-- 📡 Real-Time Dashboard – Authorities view, prioritize, and update complaints
+```bash
+cd backend/ai/pothole_detection
+pip install -r requirements.txt
+python app.py
+```
+The AI service listens on `http://127.0.0.1:5000`.
 
-- 📨 Complaint Status Updates – Citizens get notified as their issue progresses
-
-- 🧾 Data Logging – All reports are stored and tracked for auditability
-
----
-### 🧠 AI Integration
-
-We use OpenCV to analyze uploaded images and detect potholes. This includes:
-
-- Contour detection
-
-- Morphological operations
-
-- Severity scoring based on depth and spread
-
-```This AI module is built in Python and optionally integrates with the backend via API or as a pre-processing tool.```
+> **Note:** Run `python app.py` from inside `backend/ai/pothole_detection/`, because `road_damage_model.pkl` is resolved relative to the current working directory.
 
 ---
-### 📈 Future Roadmap
 
- - 🔦 Add support for reporting streetlight outages and waterlogging
+## Limitations
 
- - 🗺️ Interactive heatmaps for complaint clustering
-
- - 💬 Multilingual UI support (Hindi, Marathi, Bengali, etc.)
-
- - 📱 Native mobile app (React Native or Flutter)
-
- - 🏅 Citizen reputation & gamification system
+- The classifier relies on handcrafted features (edge density and color histograms), which may fluctuate under varied lighting conditions, rain reflections, or shadows.
+- Region proposals use edge detection and contour area thresholds; non-damage road artifacts (e.g. tar lines, fallen leaves) can occasionally be proposed.
+- Depth estimation cannot be directly measured from standard 2D monocular images.
+- The model was saved with scikit-learn 1.1.3; loading it in scikit-learn 1.6+ emits an `InconsistentVersionWarning`.
+- The admin dashboard data display was developed and verified using representative simulation records.
 
 ---
-### 🙌 Contributors
 
-| Name         | GitHub Handle                                      |
-| ------------ | -------------------------------------------------- |
-| Arnab Mistry | [@ArnabMistry](https://github.com/ArnabMistry)     |
-| Swapnil Jain | [@Swapnil220705](https://github.com/Swapnil220705) |
-| Arnav Timble | [@Arnz18](https://github.com/Arnz18)               |
-| Ojaswi Joshi | [@OjaswiJoshi13](https://github.com/OjaswiJoshi13) |
+## Future Roadmap
 
-```Together, we can pave the road to smarter civic infrastructure.```
+- 🧪 Benchmark against a public road damage dataset (e.g. RDD2022) with precision/recall curves.
+- 🔁 Add an end-to-end automated training script with dataset versioning.
+- 🤖 Compare the classical SVM approach against lightweight YOLO object detection models.
+- 🔦 Expand issue reporting to streetlights, open manholes, and urban waterlogging.
+- 🗺️ Heatmap clustering for municipal repair route optimization.
+- 💬 Multilingual localization for regional languages.
+- 📱 Native mobile client (React Native / Flutter).
+
+---
+
+## Contributors
+
+| Name | GitHub |
+| :--- | :--- |
+| **Arnab Mistry** | [@ArnabMistry](https://github.com/ArnabMistry) |
+| **Swapnil Jain** | [@Swapnil220705](https://github.com/Swapnil220705) |
+| **Arnav Timble** | [@Arnz18](https://github.com/Arnz18) |
+| **Ojaswi Joshi** | [@OjaswiJoshi13](https://github.com/OjaswiJoshi13) |
